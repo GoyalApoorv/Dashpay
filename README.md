@@ -1,2 +1,2 @@
 
-## Build a basic version of PayTM
+## A payments app built for seamless transactions.  
