@@ -1,6 +1,16 @@
 const mongoose = require("mongoose");
 
-mongoose.connect("mongodb://localhost:27017/paytmApp")
+const connectDB = async() => {
+    try {
+    mongoose.connect("mongodb://localhost:27017/paytmApp")
+    console.log("mongodb connected successfully")
+} catch (error) {
+    console.error(" Failed to connect to the database")
+    process.exit(1);
+}
+}  
+
+connectDB();
 
 const userSchema = new mongoose.Schema({
     username: {

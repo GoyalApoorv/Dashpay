@@ -5,12 +5,12 @@ const { User } = require("../db");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../config")
 const bcrypt = require("bcrypt")
-const authMiddleware = require("../authMiddleware")
+const { authMiddleware } = require("../authMiddleware")
 const saltRounds = 10 
 
 const signupSchema = zod.object(
     {
-        username: zod.string.email(),
+        username: zod.string().email(),
         firstName: zod.string(),
 	    lastName: zod.string(),
         password: zod.string()
@@ -116,10 +116,10 @@ const updateBody = zod.object({
 })
 
 router.put("/", authMiddleware, async (req, res) => {
-    const success = updateBody.safeParse(req.body);
+    const { success, data } = updateBody.safeParse(req.body);
 
     if(!success) {
-        res.status(411).json({
+        res.status(400).json({
             message: "Error while updating information"
         })
     }
@@ -140,10 +140,19 @@ router.put("/", authMiddleware, async (req, res) => {
         updatePayload.password = hashedPassword;
     }
 
+    // Only update if there are fields to update
+    if (Object.keys(updatePayload).length === 0) {
+        return res.status(400).json({
+            message: "No fields to update."
+        });
+    }
+
     await User.updateOne({ _id: req.userId }, { $set: updatePayload });
 
-        await User.updateOne({})
+    res.status(200).json({
+        message: "User updated successfully"
     })
+})
 
     router.get("/bulk", async (req, res) => {
         const filter = req.query.filter || " ";
@@ -169,5 +178,27 @@ router.put("/", authMiddleware, async (req, res) => {
             }))
         })
     })
+
+router.get("/me", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId).select("-password"); // Exclude the password hash
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.json({
+            user: {
+                id: user._id,
+                username: user.username,
+                firstName: user.firstName,
+                lastName: user.lastName
+            }
+        });
+    } catch (error) {
+        console.error("Error in /me route:", error);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 
 module.exports = router
