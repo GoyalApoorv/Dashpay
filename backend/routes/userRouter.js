@@ -84,28 +84,29 @@ router.post("/signin", async (req, res) => {
     }
 
     try {
-        const hashedPassword = bcrypt.hash(req.body.password, saltRounds);
-
         const user = await User.findOne({
-        username: req.body.username,
-        password: hashedPassword
+            username: req.body.username
         });
 
-        if (user) {
-        const token = jwt.sign({
-            userId: user._id
-        }, JWT_SECRET);
-  
-        res.json({
-            token: token
-        })
-        return;
+        if (user && await bcrypt.compare(req.body.password, user.password)) {
+            const token = jwt.sign({
+                userId: user._id
+            }, JWT_SECRET);
+      
+            res.json({
+                token: token
+            })
+            return;
         }
-    
+        
+        res.status(411).json({
+            message: "Error while logging in"
+        })
+
     } catch (error) {   
-    res.status(411).json({
-        message: "Error while logging in"
-    })   
+        res.status(500).json({
+            message: "An internal error occurred"
+        })   
     }
 })
 
@@ -154,7 +155,7 @@ router.put("/", authMiddleware, async (req, res) => {
     })
 })
 
-    router.get("/bulk", async (req, res) => {
+router.get("/bulk", async (req, res) => {
         const filter = req.query.filter || " ";
 
         const users = await User.find({

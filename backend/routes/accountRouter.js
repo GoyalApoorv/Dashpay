@@ -8,7 +8,7 @@ const { default: mongoose } = require('mongoose');
 const router = express.Router();
 
 router.get("/balance", authMiddleware, async (requestAnimationFrame, res) => {
-    const account = User.findOne({
+    const account = Account.findOne({
         userId: req.userId
     });
 
@@ -23,7 +23,7 @@ router.get("/transfer", authMiddleware, async (req, res) => {
 
     session.startTransaction();
     
-    const account = User.findOne({ userId: req.userId}).session(session);
+    const account = Account.findOne({ userId: req.userId}).session(session);
 
     if(!account || account.balance < amount) {
         await session.abortTransaction();
