@@ -4,13 +4,13 @@ import { Button } from "../components/Button";
 import { Heading } from "../components/Heading";
 import { InputBox } from "../components/InputBox";
 import { SubHeading } from "../components/SubHeading";
-import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
-import axios from "axios"; // 2. Import axios
+import { useNavigate } from "react-router-dom"; 
+import axios from "axios"; 
 
 export const Signin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [isLoading, setIsLoading] = useState(false); // 3. Add loading state back
+    const [isLoading, setIsLoading] = useState(false); 
     const navigate = useNavigate();
 
     return (

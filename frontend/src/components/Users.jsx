@@ -4,7 +4,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 
-export const Users = () => {
+export const Users = ({ onSendMoney }) => {
     // Replace with backend call
     const [users, setUsers] = useState([]);
     const [filter, setFilter] = useState("");
@@ -26,12 +26,12 @@ export const Users = () => {
             }} type="text" placeholder="Search users..." className="w-full px-2 py-1 border rounded border-slate-200"></input>
         </div>
         <div>
-            {users.map(user => <User user={user} />)}
+            {users.map(user => <User key={user.id} user={user} onSendMoney={onSendMoney} />)}
         </div>
     </>
 }
 
-function User({user}) {
+function User({user, onSendMoney}) {
     const navigate = useNavigate();
 
     return <div className="flex justify-between">
@@ -49,9 +49,7 @@ function User({user}) {
         </div>
 
         <div className="flex flex-col justify-center h-ful">
-            <Button onClick={(e) => {
-                navigate("/send?id=" + user._id + "&name=" + user.firstName);
-            }} label={"Send Money"} />
+            <Button onClick={() => onSendMoney(user)} label={"Send Money"} />
         </div>
     </div>
 }

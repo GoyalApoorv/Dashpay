@@ -1,7 +1,7 @@
 const express = require("express");
 const zod = require("zod");
 const router = express.Router();
-const { User } = require("../db");
+const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../config")
 const bcrypt = require("bcrypt")
@@ -18,13 +18,13 @@ const signupSchema = zod.object(
 )
 
 router.post("/signup", async (req, res) => {
-    const body = express.request.body;
     const {success, data} = signupSchema.safeParse(req.body);
 
     if(!success) {
-        req.status(400).json({
+        res.status(400).json({
             message: "Invalid inputs"
         })
+        return;
     }
 
     const {username, password, firstName, lastName } = data;
@@ -44,12 +44,12 @@ router.post("/signup", async (req, res) => {
         username, 
         firstName,
         lastName,
-        hashedPassword
+        password: hashedPassword
     });
 
     // Initializing an account for the user
     await Account.create({
-        userId,
+        userId: user._id,
         balance: 1 + Math.random() * 10000
     })
 
