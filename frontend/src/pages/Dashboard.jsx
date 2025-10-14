@@ -12,24 +12,29 @@ export const Dashboard = () => {
     const [recipient, setRecipient] = useState({ id: "", name: "" });
     const [balance, setBalance] = useState("10,000");
     const [transactions, setTransactions] = useState([]);
+    const [user, setUser] = useState({});
+    const navigate = useNavigate();
 
 
     const fetchDashboardData = async () => {
         try {
             const token = "Bearer " + localStorage.getItem("token");
             
-            // Fetch both balance and transactions at the same time
-            const [balanceRes, transactionsRes] = await Promise.all([
+            const [userRes, balanceRes, transactionsRes] = await Promise.all([
+                axios.get("http://localhost:3000/api/v1/user/me", { headers: { Authorization: token } }),
                 axios.get("http://localhost:3000/api/v1/account/balance", { headers: { Authorization: token } }),
                 axios.get("http://localhost:3000/api/v1/account/transactions", { headers: { Authorization: token } })
             ]);
             
+            // 3. Set all the state variables from the responses
+            setUser(userRes.data.user);
             setBalance(balanceRes.data.balance);
             setTransactions(transactionsRes.data.transactions);
         } catch (error) {
             console.error("Failed to fetch dashboard data:", error);
         }
     };
+
 
     useEffect(() => {
         fetchDashboardData();
@@ -44,7 +49,7 @@ export const Dashboard = () => {
         setIsSendModalOpen(false);
     };
     return <div>
-        <Appbar />
+        <Appbar user={user} />
         <div className="m-8">
             <Balance value={balance.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
