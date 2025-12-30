@@ -31,7 +31,7 @@ export const Users = ({ onSendMoney }) => {
     </>
 }
 
-function User({user, onSendMoney}) {
+function User({ user, onSendMoney }) {
     const navigate = useNavigate();
 
     return <div className="flex justify-between">
@@ -44,6 +44,9 @@ function User({user, onSendMoney}) {
             <div className="flex flex-col justify-center h-ful">
                 <div>
                     {user.firstName} {user.lastName}
+                </div>
+                <div className="text-sm text-slate-500">
+                    {user.username}
                 </div>
             </div>
         </div>
