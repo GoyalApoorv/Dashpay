@@ -8,14 +8,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom"
 
 export const Signup = () => {
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
-    return <div className="bg-slate-300 h-screen flex justify-center">
+  return <div className="bg-slate-300 h-screen flex justify-center">
     <div className="flex flex-col justify-center">
       <div className="rounded-lg bg-white w-80 text-center p-2 h-max px-4">
         <Heading label={"Sign up"} />
@@ -31,24 +31,29 @@ export const Signup = () => {
         }} placeholder="example@gmail.com" label={"Email"} />
         <InputBox onChange={(e) => {
           setPassword(e.target.value)
-        }} placeholder="123456" label={"Password"} />
+        }} placeholder="123456" label={"Password"} type="password" />
         <div className="pt-4">
           <Button onClick={async () => {
+            console.log("Form values:", { username, firstName, lastName, password });
             setIsLoading(true);
             try {
-              const response = await axios.post("http://localhost:3000/api/v1/user/signup", {
-              username,
-              firstName,
-              lastName,
-              password
-            });
-            localStorage.setItem("token", response.data.token)
-            navigate("/dashboard")
+              const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/user/signup`, {
+                username,
+                firstName,
+                lastName,
+                password
+              });
+              try {
+                localStorage.setItem("token", response.data.token);
+              } catch (storageError) {
+                console.warn("localStorage blocked:", storageError);
+              }
+              navigate("/dashboard")
             } catch (error) {
               console.error("Signup failed:", error);
-               alert("Signup failed. That email might already be taken. Please try again.");
+              alert("Signup failed. That email might already be taken. Please try again.");
             } finally {
-                setIsLoading(false);
+              setIsLoading(false);
             }
           }} label={isLoading ? "Signing up..." : "Sign Up"} disabled={isLoading} />
         </div>

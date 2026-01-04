@@ -43,17 +43,22 @@ router.get("/transactions", authMiddleware, async (req, res) => {
 router.post("/transfer", authMiddleware, async (req, res) => {
     try {
         const { amount, to } = req.body;
+        console.log("Transfer request:", { amount, to, from: req.userId });
 
         // Find accounts for the transfer
         const fromAccount = await Account.findOne({ userId: req.userId });
+        console.log("From account:", fromAccount);
 
         if (!fromAccount || fromAccount.balance < amount) {
+            console.log("Insufficient balance:", { balance: fromAccount?.balance, amount });
             return res.status(400).json({ message: "Insufficient balance" });
         }
 
         const toAccount = await Account.findOne({ userId: to });
+        console.log("To account:", toAccount);
 
         if (!toAccount) {
+            console.log("Invalid recipient");
             return res.status(400).json({ message: "Invalid recipient account" });
         }
 

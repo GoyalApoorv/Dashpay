@@ -7,26 +7,31 @@ export function AuthChecker({ children }) {
 
     useEffect(() => {
         const checkUserStatus = async () => {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                navigate("/signup");
-                return;
-            }
-
             try {
+                const token = localStorage.getItem("token");
+                if (!token) {
+                    navigate("/signup");
+                    return;
+                }
 
-                await axios.get("http://localhost:3000/api/v1/user/me", {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-            } catch (error) {
-                localStorage.removeItem("token"); 
-                navigate("/signin"); 
+                try {
+                    await axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/me`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (error) {
+                    localStorage.removeItem("token");
+                    navigate("/signin");
+                }
+            } catch (storageError) {
+                console.error("localStorage access blocked:", storageError);
+                // If localStorage is blocked, just allow access
+                // This is a workaround for browser security restrictions
             }
         };
 
         checkUserStatus();
-    }, [navigate]); 
+    }, [navigate]);
     return children;
 }

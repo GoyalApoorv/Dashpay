@@ -6,64 +6,69 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../config")
 const bcrypt = require("bcrypt")
 const { authMiddleware } = require("../authMiddleware")
-const saltRounds = 10 
+const saltRounds = 10
 
 const signupSchema = zod.object(
     {
         username: zod.string().email(),
         firstName: zod.string(),
-	    lastName: zod.string(),
+        lastName: zod.string(),
         password: zod.string()
     }
 )
 
 router.post("/signup", async (req, res) => {
-    const {success, data} = signupSchema.safeParse(req.body);
+    const { success, data } = signupSchema.safeParse(req.body);
 
-    if(!success) {
+    if (!success) {
         res.status(400).json({
             message: "Invalid inputs"
         })
         return;
     }
 
-    const {username, password, firstName, lastName } = data;
+    const { username, password, firstName, lastName } = data;
 
     try {
         const existingUser = await User.findOne({ username });
 
-        if(existingUser) {
+        if (existingUser) {
             return res.status(409).json({
-            message: "Username already exists"
-      });
-    }
+                message: "Username already exists"
+            });
+        }
 
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-    
-    const user = await User.create({
-        username, 
-        firstName,
-        lastName,
-        password: hashedPassword
-    });
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Initializing an account for the user
-    await Account.create({
-        userId: user._id,
-        balance: 1 + Math.random() * 10000
-    })
+        const user = await User.create({
+            username,
+            firstName,
+            lastName,
+            password: hashedPassword
+        });
 
-    const token = jwt.sign({
-        userId: user._id
-    }, JWT_SECRET);
-    
-    res.status(201).json({
-        message: "User created successfully",
-        token: token
-    })
+        // Initializing an account for the user
+        await Account.create({
+            userId: user._id,
+            balance: 1 + Math.random() * 10000
+        })
+
+        const token = jwt.sign({
+            userId: user._id
+        }, JWT_SECRET);
+
+        res.status(201).json({
+            message: "User created successfully",
+            token: token
+        })
 
     } catch (error) {
-        console.error("Signup error", error);
+        console.error("Signup error:", error);
+        console.error("Error details:", error.message);
+        if (error.errors) {
+            console.error("Validation errors:", JSON.stringify(error.errors, null, 2));
+        }
+        console.error("Request body:", req.body);
         res.status(500).json({
             message: "An internal error occurred"
         });
@@ -72,7 +77,7 @@ router.post("/signup", async (req, res) => {
 
 const signinBody = zod.object({
     username: zod.string().email(),
-	password: zod.string()
+    password: zod.string()
 })
 
 router.post("/signin", async (req, res) => {
@@ -92,26 +97,26 @@ router.post("/signin", async (req, res) => {
             const token = jwt.sign({
                 userId: user._id
             }, JWT_SECRET);
-      
+
             res.json({
                 token: token
             })
             return;
         }
-        
+
         res.status(411).json({
             message: "Error while logging in"
         })
 
-    } catch (error) {   
+    } catch (error) {
         res.status(500).json({
             message: "An internal error occurred"
-        })   
+        })
     }
 })
 
 const updateBody = zod.object({
-	password: zod.string().optional(),
+    password: zod.string().optional(),
     firstName: zod.string().optional(),
     lastName: zod.string().optional(),
 })
@@ -119,13 +124,13 @@ const updateBody = zod.object({
 router.put("/", authMiddleware, async (req, res) => {
     const { success, data } = updateBody.safeParse(req.body);
 
-    if(!success) {
+    if (!success) {
         res.status(400).json({
             message: "Error while updating information"
         })
     }
 
-    const { password, firstName, lastName } = data; 
+    const { password, firstName, lastName } = data;
 
     const updatePayload = {};
 
@@ -156,29 +161,29 @@ router.put("/", authMiddleware, async (req, res) => {
 })
 
 router.get("/bulk", async (req, res) => {
-        const filter = req.query.filter || " ";
+    const filter = req.query.filter || " ";
 
-        const users = await User.find({
-            $or: [{
-                firstName: {
-                    $regex: filter
-                }
-            }, {
-                lastName: {
-                    $regex: filter
-                }
-            }]
-        })
-
-        res.json({
-            user: users.map(user => ({
-                username: user.username,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                id: user._id
-            }))
-        })
+    const users = await User.find({
+        $or: [{
+            firstName: {
+                $regex: filter
+            }
+        }, {
+            lastName: {
+                $regex: filter
+            }
+        }]
     })
+
+    res.json({
+        user: users.map(user => ({
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            id: user._id
+        }))
+    })
+})
 
 router.get("/me", authMiddleware, async (req, res) => {
     try {

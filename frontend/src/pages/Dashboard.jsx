@@ -19,13 +19,14 @@ export const Dashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const token = "Bearer " + localStorage.getItem("token");
-            
+            const API_URL = import.meta.env.VITE_API_URL;
+
             const [userRes, balanceRes, transactionsRes] = await Promise.all([
-                axios.get("http://localhost:3000/api/v1/user/me", { headers: { Authorization: token } }),
-                axios.get("http://localhost:3000/api/v1/account/balance", { headers: { Authorization: token } }),
-                axios.get("http://localhost:3000/api/v1/account/transactions", { headers: { Authorization: token } })
+                axios.get(`${API_URL}/api/v1/user/me`, { headers: { Authorization: token } }),
+                axios.get(`${API_URL}/api/v1/account/balance`, { headers: { Authorization: token } }),
+                axios.get(`${API_URL}/api/v1/account/transactions`, { headers: { Authorization: token } })
             ]);
-            
+
             // 3. Set all the state variables from the responses
             setUser(userRes.data.user);
             setBalance(balanceRes.data.balance);
@@ -55,16 +56,16 @@ export const Dashboard = () => {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
             })} />
-             <Users onSendMoney={handleOpenSendModal} />
-             <TransactionHistory transactions={transactions} />
+            <Users onSendMoney={handleOpenSendModal} />
+            <TransactionHistory transactions={transactions} />
         </div>
 
-        <SendMoneyModal 
-                open={isSendModalOpen}
-                onClose={handleCloseSendModal}
-                toUserId={recipient.id}
-                toName={recipient.name}
-            />
+        <SendMoneyModal
+            open={isSendModalOpen}
+            onClose={handleCloseSendModal}
+            toUserId={recipient.id}
+            toName={recipient.name}
+        />
 
     </div>
 }

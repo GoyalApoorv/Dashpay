@@ -1,14 +1,15 @@
 const mongoose = require("mongoose");
 
-const connectDB = async() => {
+const connectDB = async () => {
     try {
-    mongoose.connect("mongodb://localhost:27017/paytmApp")
-    console.log("mongodb connected successfully")
-} catch (error) {
-    console.error(" Failed to connect to the database")
-    process.exit(1);
+        const dbUrl = process.env.DATABASE_URL || "mongodb://localhost:27017/paytmApp";
+        mongoose.connect(dbUrl)
+        console.log("mongodb connected successfully")
+    } catch (error) {
+        console.error(" Failed to connect to the database")
+        process.exit(1);
+    }
 }
-}  
 
 connectDB();
 
@@ -84,7 +85,7 @@ const Account = mongoose.model('Account', accountSchema);
 const User = mongoose.model('User', userSchema);
 
 module.exports = {
-	User,
+    User,
     Account,
     Transaction
 };

@@ -4,13 +4,13 @@ import { Button } from "../components/Button";
 import { Heading } from "../components/Heading";
 import { InputBox } from "../components/InputBox";
 import { SubHeading } from "../components/SubHeading";
-import { useNavigate } from "react-router-dom"; 
-import axios from "axios"; 
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export const Signin = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [isLoading, setIsLoading] = useState(false); 
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     return (
@@ -29,7 +29,7 @@ export const Signin = () => {
                                 setIsLoading(true);
                                 try {
                                     // 4. Correct syntax and handle response
-                                    const response = await axios.post("http://localhost:3000/api/v1/user/signin", {
+                                    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/user/signin`, {
                                         username: email,
                                         password: password
                                     });

@@ -12,7 +12,7 @@ export const SendMoneyModal = ({ open, onClose, toUserId, toName }) => {
         setError("");
         setSuccess("");
         try {
-            await axios.post("http://localhost:3000/api/v1/account/transfer", {
+            await axios.post(`${import.meta.env.VITE_API_URL}/api/v1/account/transfer`, {
                 to: toUserId,
                 amount: Number(amount)
             }, {
