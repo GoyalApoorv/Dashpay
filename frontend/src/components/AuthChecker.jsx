@@ -1,11 +1,17 @@
 import { useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export function AuthChecker({ children }) {
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
+        // Skip auth check for signin and signup pages
+        if (location.pathname === '/signin' || location.pathname === '/signup') {
+            return;
+        }
+
         const checkUserStatus = async () => {
             try {
                 const token = localStorage.getItem("token");
@@ -32,6 +38,6 @@ export function AuthChecker({ children }) {
         };
 
         checkUserStatus();
-    }, [navigate]);
+    }, [navigate, location.pathname]);
     return children;
 }
