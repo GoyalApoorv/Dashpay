@@ -45,6 +45,13 @@ router.post("/transfer", authMiddleware, async (req, res) => {
         const { amount, to } = req.body;
         console.log("Transfer request:", { amount, to, from: req.userId });
 
+        // Prevent self-transfer
+        if (req.userId === to) {
+            return res.status(400).json({
+                message: "Cannot transfer money to yourself"
+            });
+        }
+
         // Find accounts for the transfer
         const fromAccount = await Account.findOne({ userId: req.userId });
         console.log("From account:", fromAccount);

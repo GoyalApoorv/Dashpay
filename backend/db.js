@@ -67,8 +67,21 @@ const transactionSchema = new mongoose.Schema({
             ref: 'User',
             required: true
         },
+        toFirstName: {
+            type: String,
+            required: true
+        },
+        toLastName: {
+            type: String,
+            required: true
+        },
         amount: {
             type: Number,
+            required: true
+        },
+        status: {
+            type: String,
+            enum: ['Sent', 'Received'],
             required: true
         },
         date: {

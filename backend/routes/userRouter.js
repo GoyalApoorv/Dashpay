@@ -160,17 +160,20 @@ router.put("/", authMiddleware, async (req, res) => {
     })
 })
 
-router.get("/bulk", async (req, res) => {
-    const filter = req.query.filter || " ";
+router.get("/bulk", authMiddleware, async (req, res) => {
+    const filter = req.query.filter || "";
 
     const users = await User.find({
+        _id: { $ne: req.userId }, // Exclude current user
         $or: [{
             firstName: {
-                $regex: filter
+                $regex: filter,
+                $options: 'i' // Case-insensitive
             }
         }, {
             lastName: {
-                $regex: filter
+                $regex: filter,
+                $options: 'i' // Case-insensitive
             }
         }]
     })
@@ -180,7 +183,7 @@ router.get("/bulk", async (req, res) => {
             username: user.username,
             firstName: user.firstName,
             lastName: user.lastName,
-            id: user._id
+            _id: user._id
         }))
     })
 })

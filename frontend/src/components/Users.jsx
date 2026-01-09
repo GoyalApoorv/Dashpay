@@ -10,7 +10,11 @@ export const Users = ({ onSendMoney }) => {
     const [filter, setFilter] = useState("");
 
     useEffect(() => {
-        axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/bulk?filter=` + filter)
+        axios.get(`${import.meta.env.VITE_API_URL}/api/v1/user/bulk?filter=` + filter, {
+            headers: {
+                Authorization: "Bearer " + localStorage.getItem("token")
+            }
+        })
             .then(response => {
                 setUsers(response.data.user)
             })
