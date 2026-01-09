@@ -1,10 +1,8 @@
 const mongoose = require("mongoose");
 
-const dbUrl = "mongodb+srv://admin:GR91D0C7DAdarE4A@cluster0.tkqypdn.mongodb.net/dashpay";
-
 const connectDB = async () => {
     try {
-        const dbUrl = process.env.DATABASE_URL || "mongodb://localhost:27017/paytmApp";
+        const dbUrl = "mongodb+srv://admin:GR91D0C7DAdarE4A@cluster0.tkqypdn.mongodb.net/dashpay";
         console.log("Attempting to connect to MongoDB with URL:", dbUrl.replace(/:[^:@]+@/, ':****@')); // Hide password in logs
         mongoose.connect(dbUrl)
         console.log("mongodb connected successfully")
