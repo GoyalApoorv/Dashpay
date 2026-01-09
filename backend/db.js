@@ -2,7 +2,12 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
     try {
-        const dbUrl = "mongodb+srv://admin:Js93fHmDDudx5NyI@cluster0.tkqypdn.mongodb.net/";
+        const dbUrl = process.env.DATABASE_URL;
+
+        if (!dbUrl) {
+            throw new Error("DATABASE_URL environment variable is not set");
+        }
+
         console.log("Attempting to connect to MongoDB with URL:", dbUrl.replace(/:[^:@]+@/, ':****@')); // Hide password in logs
         mongoose.connect(dbUrl)
         console.log("mongodb connected successfully")
