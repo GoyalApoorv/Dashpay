@@ -42,7 +42,7 @@ export const Dashboard = () => {
     }, []);
 
     const handleOpenSendModal = (user) => {
-        setRecipient({ id: user.id, name: user.firstName });
+        setRecipient({ id: user._id, name: user.firstName });
         setIsSendModalOpen(true);
     };
 
