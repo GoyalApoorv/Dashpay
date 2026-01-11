@@ -41,76 +41,104 @@ router.get("/transactions", authMiddleware, async (req, res) => {
 });
 
 router.post("/transfer", authMiddleware, async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
         const { amount, to } = req.body;
-        console.log("Transfer request:", { amount, to, from: req.userId });
 
-        // Prevent self-transfer
+        // Validation
         if (req.userId === to) {
+            await session.abortTransaction();
             return res.status(400).json({
                 message: "Cannot transfer money to yourself"
             });
         }
 
-        // Find accounts for the transfer
-        const fromAccount = await Account.findOne({ userId: req.userId });
-        console.log("From account:", fromAccount);
+        if (!amount || amount <= 0) {
+            await session.abortTransaction();
+            return res.status(400).json({
+                message: "Invalid transfer amount"
+            });
+        }
+
+        // Find and validate accounts WITHIN transaction
+        const fromAccount = await Account.findOne({ userId: req.userId }).session(session);
 
         if (!fromAccount || fromAccount.balance < amount) {
-            console.log("Insufficient balance:", { balance: fromAccount?.balance, amount });
+            await session.abortTransaction();
             return res.status(400).json({ message: "Insufficient balance" });
         }
 
-        const toAccount = await Account.findOne({ userId: to });
-        console.log("To account:", toAccount);
+        const toAccount = await Account.findOne({ userId: to }).session(session);
 
         if (!toAccount) {
-            console.log("Invalid recipient");
+            await session.abortTransaction();
             return res.status(400).json({ message: "Invalid recipient account" });
         }
 
-        // Perform the transfer
-        await Account.updateOne({ userId: req.userId }, { $inc: { balance: -amount } });
-        await Account.updateOne({ userId: to }, { $inc: { balance: amount } });
+        // Perform atomic transfer
+        await Account.updateOne(
+            { userId: req.userId },
+            { $inc: { balance: -amount } }
+        ).session(session);
 
-        // Get user details for transaction logging
-        const fromUser = await User.findById(req.userId);
-        const toUser = await User.findById(to);
+        await Account.updateOne(
+            { userId: to },
+            { $inc: { balance: amount } }
+        ).session(session);
+
+        // Log transactions
+        const fromUser = await User.findById(req.userId).session(session);
+        const toUser = await User.findById(to).session(session);
         const date = new Date();
 
-        // For the sender
-        await Transaction.updateOne({ userId: req.userId }, {
-            $push: {
-                transactions: {
-                    toUserId: to,
-                    toFirstName: toUser.firstName,
-                    toLastName: toUser.lastName,
-                    amount: amount,
-                    status: 'Sent',
-                    date: date
+        await Transaction.updateOne(
+            { userId: req.userId },
+            {
+                $push: {
+                    transactions: {
+                        toUserId: to,
+                        toFirstName: toUser.firstName,
+                        toLastName: toUser.lastName,
+                        amount: amount,
+                        status: 'Sent',
+                        date: date
+                    }
                 }
-            }
-        }, { upsert: true });
+            },
+            { upsert: true, session }
+        );
 
-        // For the receiver
-        await Transaction.updateOne({ userId: to }, {
-            $push: {
-                transactions: {
-                    toUserId: req.userId,
-                    toFirstName: fromUser.firstName,
-                    toLastName: fromUser.lastName,
-                    amount: amount,
-                    status: 'Received',
-                    date: date
+        await Transaction.updateOne(
+            { userId: to },
+            {
+                $push: {
+                    transactions: {
+                        toUserId: req.userId,
+                        toFirstName: fromUser.firstName,
+                        toLastName: fromUser.lastName,
+                        amount: amount,
+                        status: 'Received',
+                        date: date
+                    }
                 }
-            }
-        }, { upsert: true });
+            },
+            { upsert: true, session }
+        );
 
+        // Commit transaction
+        await session.commitTransaction();
         res.json({ message: "Transfer successful" });
 
     } catch (error) {
-        console.error("Error during transfer:", error);
-        return res.status(500).json({ message: "An error occurred during the transfer." });
+        await session.abortTransaction();
+        console.error("Transfer failed:", error);
+        return res.status(500).json({
+            message: "Transfer failed. Please try again."
+        });
+    } finally {
+        session.endSession();
     }
 });
 
