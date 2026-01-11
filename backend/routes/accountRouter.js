@@ -62,6 +62,15 @@ router.post("/transfer", authMiddleware, async (req, res) => {
             });
         }
 
+        // Check if user is verified
+        const currentUser = await User.findById(req.userId).session(session);
+        if (!currentUser.isVerified) {
+            await session.abortTransaction();
+            return res.status(403).json({
+                message: "Please verify your email before making transfers"
+            });
+        }
+
         // Find and validate accounts WITHIN transaction
         const fromAccount = await Account.findOne({ userId: req.userId }).session(session);
 

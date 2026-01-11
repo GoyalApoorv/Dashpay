@@ -5,7 +5,9 @@ const { User, Account } = require("../db");
 const jwt = require("jsonwebtoken");
 const JWT_SECRET = require("../config")
 const bcrypt = require("bcrypt")
+const crypto = require("crypto");
 const { authMiddleware } = require("../authMiddleware")
+const { sendVerificationEmail } = require("../utils/emailService");
 const saltRounds = 10
 
 const signupSchema = zod.object(
@@ -40,12 +42,27 @@ router.post("/signup", async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+        // Generate verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
         const user = await User.create({
             username,
             firstName,
             lastName,
-            password: hashedPassword
+            password: hashedPassword,
+            isVerified: false,
+            verificationToken,
+            verificationTokenExpires
         });
+
+        // Send verification email
+        try {
+            await sendVerificationEmail(username, verificationToken, firstName);
+        } catch (emailError) {
+            console.error("Failed to send verification email:", emailError);
+            // Continue with signup even if email fails
+        }
 
         // Initializing an account for the user
         await Account.create({
@@ -58,8 +75,9 @@ router.post("/signup", async (req, res) => {
         }, JWT_SECRET);
 
         res.status(201).json({
-            message: "User created successfully",
-            token: token
+            message: "User created successfully. Please check your email to verify your account.",
+            token: token,
+            isVerified: false
         })
 
     } catch (error) {
@@ -207,6 +225,74 @@ router.get("/me", authMiddleware, async (req, res) => {
     } catch (error) {
         console.error("Error in /me route:", error);
         res.status(500).json({ message: "Server error" });
+    }
+});
+
+// Email verification endpoint
+router.get("/verify-email", async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        if (!token) {
+            return res.status(400).json({ message: "Verification token is required" });
+        }
+
+        const user = await User.findOne({
+            verificationToken: token,
+            verificationTokenExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({
+                message: "Invalid or expired verification token"
+            });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpires = undefined;
+        await user.save();
+
+        res.json({
+            message: "Email verified successfully!",
+            success: true
+        });
+
+    } catch (error) {
+        console.error("Verification error:", error);
+        res.status(500).json({ message: "Verification failed" });
+    }
+});
+
+// Resend verification email
+router.post("/resend-verification", authMiddleware, async (req, res) => {
+    try {
+        const user = await User.findById(req.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: "Email already verified" });
+        }
+
+        // Generate new verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+        user.verificationToken = verificationToken;
+        user.verificationTokenExpires = verificationTokenExpires;
+        await user.save();
+
+        // Send verification email
+        await sendVerificationEmail(user.username, verificationToken, user.firstName);
+
+        res.json({ message: "Verification email sent successfully" });
+
+    } catch (error) {
+        console.error("Resend verification error:", error);
+        res.status(500).json({ message: "Failed to resend verification email" });
     }
 });
 
