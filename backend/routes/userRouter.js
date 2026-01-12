@@ -70,14 +70,9 @@ router.post("/signup", async (req, res) => {
             balance: 1 + Math.random() * 10000
         })
 
-        const token = jwt.sign({
-            userId: user._id
-        }, JWT_SECRET);
-
         res.status(201).json({
-            message: "User created successfully. Please check your email to verify your account.",
-            token: token,
-            isVerified: false
+            message: "Account created! Please check your email to verify your account before signing in.",
+            email: username
         })
 
     } catch (error) {
@@ -112,6 +107,13 @@ router.post("/signin", async (req, res) => {
         });
 
         if (user && await bcrypt.compare(req.body.password, user.password)) {
+            // Check if email is verified
+            if (!user.isVerified) {
+                return res.status(403).json({
+                    message: "Please verify your email before signing in. Check your inbox for the verification link."
+                });
+            }
+
             const token = jwt.sign({
                 userId: user._id
             }, JWT_SECRET);

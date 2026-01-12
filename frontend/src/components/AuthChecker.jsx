@@ -7,8 +7,8 @@ export function AuthChecker({ children }) {
     const location = useLocation();
 
     useEffect(() => {
-        // Skip auth check for signin and signup pages
-        if (location.pathname === '/signin' || location.pathname === '/signup') {
+        // Skip auth check for signin, signup, and verify-email pages
+        if (location.pathname === '/signin' || location.pathname === '/signup' || location.pathname === '/verify-email') {
             return;
         }
 
