@@ -1,9 +1,13 @@
 require('dotenv').config();
 const express = require("express");
 const cors = require("cors");
+const passport = require("passport");
 const mainRouter = require("./routes/index");
 
 const app = express();
+
+// Initialize Passport
+require('./config/passport')(passport);
 
 // CORS configuration for production
 const corsOptions = {
@@ -13,6 +17,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(passport.initialize());
 
 // Health check endpoint
 app.get("/health", (req, res) => {

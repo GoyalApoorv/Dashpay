@@ -44,6 +44,11 @@ const userSchema = new mongoose.Schema({
     verificationTokenExpires: {
         type: Date
     },
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true
+    },
     firstName: {
         type: String,
         required: true,
