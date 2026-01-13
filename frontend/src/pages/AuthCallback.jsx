@@ -13,8 +13,13 @@ export const AuthCallback = () => {
         if (token) {
             console.log('Saving token to localStorage...');
             localStorage.setItem('token', token);
-            console.log('Token saved, redirecting to dashboard');
-            navigate('/dashboard');
+            console.log('Token saved, waiting before redirect...');
+
+            // Small delay to ensure localStorage persists before navigation
+            setTimeout(() => {
+                console.log('Redirecting to dashboard');
+                navigate('/dashboard');
+            }, 100);
         } else {
             console.log('No token found, redirecting to signin');
             navigate('/signin');
