@@ -6,6 +6,9 @@ const mainRouter = require("./routes/index");
 
 const app = express();
 
+// Trust proxy - needed for Render to detect HTTPS correctly
+app.set('trust proxy', 1);
+
 // Initialize Passport
 require('./config/passport')(passport);
 
