@@ -6,11 +6,17 @@ export const AuthCallback = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        console.log('AuthCallback component mounted');
         const token = searchParams.get('token');
+        console.log('Token from URL:', token);
+
         if (token) {
+            console.log('Saving token to localStorage...');
             localStorage.setItem('token', token);
+            console.log('Token saved, redirecting to dashboard');
             navigate('/dashboard');
         } else {
+            console.log('No token found, redirecting to signin');
             navigate('/signin');
         }
     }, [searchParams, navigate]);
