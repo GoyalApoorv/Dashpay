@@ -43,15 +43,14 @@ export const Signup = () => {
                 lastName,
                 password
               });
-              try {
-                localStorage.setItem("token", response.data.token);
-              } catch (storageError) {
-                console.warn("localStorage blocked:", storageError);
-              }
-              navigate("/dashboard")
+
+              // Show success message - no token returned, user must verify email
+              alert(response.data.message || "Account created! Please check your email to verify your account.");
+              // Stay on signup page or redirect to signin
+              navigate("/signin");
             } catch (error) {
               console.error("Signup failed:", error);
-              alert("Signup failed. That email might already be taken. Please try again.");
+              alert(error.response?.data?.message || "Signup failed. That email might already be taken. Please try again.");
             } finally {
               setIsLoading(false);
             }
